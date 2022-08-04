@@ -1,7 +1,7 @@
 # -*- mode: Python -*-
 
 load('ext://restart_process', 'docker_build_with_restart')
-load('ext://helm_remote', 'helm_remote')
+load('ext://helm_resource', 'helm_resource')
 compile_opt = 'GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 '
 
 # Compile example application
@@ -28,11 +28,11 @@ docker_build_with_restart(
 )
 
 # Install example helm chart
-k8s_yaml(helm('helm'))
-
-# Label and port forwarding example applciation
-k8s_resource(
-  "hello-world",
-  port_forwards='8080:8080',
-  labels="example-application",
+helm_resource(
+  'hello-world',
+  'helm',
+  image_deps=['hello-world-image'],
+  image_keys=[('image.repository', 'image.tag')],
+  port_forwards=['8080:8080'],
+  labels="hello-world",
 )
