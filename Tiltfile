@@ -4,13 +4,22 @@ load('ext://restart_process', 'docker_build_with_restart')
 load('ext://helm_resource', 'helm_resource')
 compile_opt = 'GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 '
 
+# Swag
+local_resource(
+  'update-swagger',
+  'swag init -g main.go --output docs',
+  deps=['main.go'],
+  labels="hello-world",
+)
+
 # Compile example application
 local_resource(
   'hello-world-compile',
   compile_opt + 'go build -o bin/hello-world main.go',
-  deps=['.'],
+  deps=['main.go', 'docs'],
   ignore=['bin', 'helm', 'Dockerfile', 'Tiltfile', 'README.md', 'LICENSE', '.gitignore'],
-  labels="example-application",
+  resource_deps=['update-swagger'],
+  labels="hello-world",
 )
 
 # Build example docker image
