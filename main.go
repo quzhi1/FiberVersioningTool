@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/utils"
@@ -51,8 +52,15 @@ func main() {
 		versionChange.ResponseVersionAdaptor,
 	)
 
+	// Test download
+	app.Get("/download-by-stream", downloadViaStream)
+	app.Get("/download", download)
+
 	// Start
-	app.Listen(":8080")
+	err := app.Listen(":8080")
+	if err != nil {
+		panic(err)
+	}
 }
 
 // @Summary Show the status of server.
@@ -83,7 +91,7 @@ func post(c *fiber.Ctx) error {
 	// Parse request json
 	err := json.Unmarshal(c.Body(), &requestBody)
 	if err != nil {
-		c.Status(400).WriteString("Invalid schema: " + err.Error())
+		_, err = c.Status(400).WriteString("Invalid schema: " + err.Error())
 		return err
 	}
 
@@ -97,7 +105,7 @@ func post(c *fiber.Ctx) error {
 	fmt.Printf("Returning response: %v\n", res)
 	err = c.JSON(res)
 	if err != nil {
-		c.Status(500).WriteString("Failed to construct JSON: " + err.Error())
+		_, err = c.Status(500).WriteString("Failed to construct JSON: " + err.Error())
 		return err
 	}
 
@@ -110,4 +118,27 @@ func post(c *fiber.Ctx) error {
 	}
 
 	return c.Next()
+}
+
+func downloadViaStream(c *fiber.Ctx) error {
+	// Open the file (no need to close because fiber will close it automatically)
+	file, err := os.Open("README.md")
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return err
+	}
+
+	// File headers
+	c.Set(fiber.HeaderContentDisposition, fmt.Sprintf("attachment; filename=\"%s\"", file.Name()))
+	c.Set(fiber.HeaderContentType, "text/plain")
+
+	// file is an *os.File, which implements the io.Reader interface
+	return c.SendStream(file)
+}
+
+func download(c *fiber.Ctx) error {
+	// File headers
+	c.Set(fiber.HeaderContentDisposition, "attachment; filename=\"README.md\"")
+	c.Set(fiber.HeaderContentType, "text/plain")
+	return c.SendFile("README.md")
 }

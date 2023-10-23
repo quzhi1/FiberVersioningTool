@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+bin
 
 # Test binary, built with `go test -c`
 *.test
@@ -17,3 +18,7 @@
 # docs
 /docs
 .DS_Store
+
+# IDE
+.idea
+*.iml

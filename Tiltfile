@@ -30,6 +30,7 @@ docker_build_with_restart(
   dockerfile='Dockerfile',
   only=[
     './bin',
+    './README.md',
   ],
   live_update=[
     sync('./bin', '/opt/app/bin'),
